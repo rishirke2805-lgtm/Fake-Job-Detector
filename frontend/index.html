@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JobSure — AI Fake Job Detector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2A22;
+    --ink-soft:#3A4A40;
+    --base:#EEF0E8;
+    --card:#FBFAF5;
+    --card-line:#D9DBCC;
+    --line:#CBCEBC;
+    --safe:#2F6B4F;
+    --safe-bg:#E4EEE6;
+    --caution:#966016;
+    --caution-bg:#F5E9D2;
+    --danger:#A23B2E;
+    --danger-bg:#F3DED9;
+    --stamp:#A23B2E;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--base);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+  .app{max-width:1040px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+
+  header{padding:28px 32px 0;}
+  .brand{display:flex;align-items:baseline;gap:10px;margin-bottom:22px;}
+  .brand-mark{width:30px;height:30px;border:1.5px solid var(--ink);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:16px;flex-shrink:0;}
+  .brand-name{font-family:'Fraunces',serif;font-weight:600;font-size:22px;letter-spacing:-0.01em;}
+  .brand-sub{font-size:13px;color:var(--ink-soft);margin-left:2px;}
+
+  nav{display:flex;gap:2px;border-bottom:1.5px solid var(--ink);}
+  .tab{padding:11px 18px;font-size:14px;font-weight:500;background:transparent;border:1.5px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;color:var(--ink-soft);font-family:'IBM Plex Sans',sans-serif;position:relative;top:1.5px;}
+  .tab.active{background:var(--card);border-color:var(--ink);color:var(--ink);}
+
+  main{flex:1;padding:36px 32px 60px;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  h1.page-title{font-family:'Fraunces',serif;font-weight:500;font-size:26px;margin:0 0 6px;}
+  .page-desc{font-size:14px;color:var(--ink-soft);margin:0 0 28px;max-width:520px;line-height:1.55;}
+
+  .card{background:var(--card);border:1.5px solid var(--card-line);border-radius:10px;padding:26px;}
+
+  label.field-label{display:block;font-size:12.5px;font-weight:500;color:var(--ink-soft);margin-bottom:7px;}
+  textarea, input[type=text]{width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:var(--ink);background:#fff;border:1.5px solid var(--line);border-radius:7px;padding:12px 14px;resize:vertical;}
+  textarea:focus, input[type=text]:focus{outline:none;border-color:var(--ink);}
+  textarea{min-height:170px;line-height:1.6;}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 22px;}
+  .chip{font-size:12.5px;padding:6px 12px;border:1.5px solid var(--line);border-radius:20px;background:#fff;cursor:pointer;color:var(--ink-soft);}
+  .chip:hover{border-color:var(--ink);color:var(--ink);}
+
+  .btn-primary{background:var(--ink);color:var(--card);border:none;border-radius:7px;padding:12px 22px;font-size:14px;font-weight:500;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;}
+  .btn-primary:hover{background:var(--ink-soft);}
+  .btn-primary:disabled{opacity:0.45;cursor:default;}
+  .btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line);border-radius:7px;padding:11px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;}
+  .btn-ghost:hover{border-color:var(--ink);}
+
+  .form-foot{display:flex;align-items:center;justify-content:space-between;margin-top:20px;}
+  .hint{font-size:12.5px;color:var(--ink-soft);}
+
+  .loading{display:none;align-items:center;gap:10px;font-size:13.5px;color:var(--ink-soft);margin-top:16px;}
+  .loading.active{display:flex;}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--ink-soft);animation:pulse 1.1s infinite ease-in-out;}
+  .dot:nth-child(2){animation-delay:0.15s;}
+  .dot:nth-child(3){animation-delay:0.3s;}
+  @keyframes pulse{0%,80%,100%{opacity:0.25;}40%{opacity:1;}}
+
+  .report-head{display:flex;gap:28px;align-items:flex-start;margin-bottom:28px;}
+  .stamp-wrap{flex-shrink:0;width:130px;height:130px;}
+  .stamp{width:130px;height:130px;border-radius:50%;border:3px solid var(--stamp);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-8deg);color:var(--stamp);}
+  .stamp .pct{font-family:'Fraunces',serif;font-weight:600;font-size:30px;line-height:1;}
+  .stamp .verdict{font-size:10.5px;letter-spacing:0.04em;text-transform:uppercase;margin-top:4px;font-weight:500; text-align: center;}
+
+  .report-summary{flex:1;padding-top:6px;}
+  .report-summary h2{font-family:'Fraunces',serif;font-size:20px;font-weight:500;margin:0 0 8px;}
+  .report-summary p{font-size:14px;line-height:1.6;color:var(--ink-soft);margin:0;}
+
+  .section-label{font-size:12px;font-weight:600;letter-spacing:0.03em;color:var(--ink-soft);margin:0 0 12px;text-transform:uppercase;}
+
+  .fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--card-line);border:1.5px solid var(--card-line);border-radius:8px;overflow:hidden;margin-bottom:30px;}
+  .field-cell{background:var(--card);padding:13px 16px;}
+  .field-cell .k{font-size:11.5px;color:var(--ink-soft);margin:0 0 3px;}
+  .field-cell .v{font-size:13.5px;font-family:'IBM Plex Mono',monospace;}
+
+  .flags{list-style:none;margin:0 0 30px;padding:0;display:flex;flex-direction:column;gap:10px;}
+  .flag{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--card-line);border-radius:8px;padding:13px 15px;background:var(--card);}
+  .flag-icon{width:20px;height:20px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;margin-top:1px;}
+  .flag.hit .flag-icon{background:var(--danger-bg);color:var(--danger);}
+  .flag.clear .flag-icon{background:var(--safe-bg);color:var(--safe);}
+  .flag-body .t{font-size:13.5px;font-weight:500;margin:0 0 2px;}
+  .flag-body .d{font-size:12.5px;color:var(--ink-soft);margin:0;line-height:1.5;}
+
+  .tips{background:var(--card);border:1.5px solid var(--card-line);border-radius:8px;padding:18px 20px;margin-bottom:26px;}
+  .tips ul{margin:8px 0 0;padding-left:18px;}
+  .tips li{font-size:13.5px;line-height:1.7;color:var(--ink-soft);}
+
+  .report-actions{display:flex;gap:10px;}
+
+  table.log{width:100%;border-collapse:collapse;font-size:13px;}
+  table.log th{text-align:left;font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.03em;font-weight:600;padding:0 14px 10px;border-bottom:1.5px solid var(--ink);}
+  table.log td{padding:13px 14px;border-bottom:1px solid var(--card-line);vertical-align:middle;}
+  table.log tr:last-child td{border-bottom:none;}
+  .badge{display:inline-block;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:20px;}
+  .badge.safe{background:var(--safe-bg);color:var(--safe);}
+  .badge.caution{background:var(--caution-bg);color:var(--caution);}
+  .badge.danger{background:var(--danger-bg);color:var(--danger);}
+  .log-title{font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+  .log-meta{font-size:11.5px;color:var(--ink-soft);}
+
+  .empty{border:1.5px dashed var(--line);border-radius:8px;padding:40px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">J</div>
+      <div class="brand-name">JobSure</div>
+      <div class="brand-sub">AI-powered fake job detector</div>
+    </div>
+    <nav>
+      <button class="tab active" data-tab="check">Check a posting</button>
+      <button class="tab" data-tab="report">Report</button>
+      <button class="tab" data-tab="log">Case log</button>
+    </nav>
+  </header>
+
+  <main>
+
+    <section class="screen active" id="screen-check">
+      <h1 class="page-title">Paste a job posting before you apply</h1>
+      <p class="page-desc">Drop in the full job description, or a posting link, and our AI checks it against known scam patterns — fee requests, unrealistic pay, mismatched email domains, and pressure tactics.</p>
+
+      <div class="card">
+        <label class="field-label" for="jobtext">Job description or Screenshot</label>
+        
+        <!-- NEW FILE UPLOAD BUTTON -->
+        <input type="file" id="jobimage" accept="image/png, image/jpeg, image/jpg" style="margin-bottom: 15px;">
+        
+        <textarea id="jobtext" placeholder="Paste the job description text here, or upload a screenshot above..."></textarea>
+
+        <div class="chips">
+          <div class="hint" style="margin-right:4px;">Try an example:</div>
+          <button class="chip" data-sample="genuine">Genuine-looking listing</button>
+          <button class="chip" data-sample="scam">Suspicious listing</button>
+        </div>
+
+        <div class="form-foot">
+          <button class="btn-primary" id="runCheck">Run check</button>
+          <div class="hint">Nothing is shared with the employer or posted publicly.</div>
+        </div>
+
+        <div class="loading" id="loadingRow">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          <span>Extracting details and scoring the posting…</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-report">
+      <h1 class="page-title">Risk report</h1>
+      <p class="page-desc">Here's what the AI found, in plain language, with the reasons behind the score.</p>
+
+      <div class="card">
+        <div class="report-head">
+          <div class="stamp-wrap">
+            <div class="stamp" id="stampEl">
+              <div class="pct" id="stampPct">—</div>
+              <div class="verdict" id="stampVerdict">—</div>
+            </div>
+          </div>
+          <div class="report-summary">
+            <h2 id="reportHeadline">Awaiting a posting to check</h2>
+            <p id="reportSub">Run a check from the previous tab to see extracted details, red flags, and safety tips here.</p>
+          </div>
+        </div>
+
+        <div id="reportBody" style="display:none;">
+          <p class="section-label">Extracted details</p>
+          <div class="fields-grid" id="fieldsGrid"></div>
+
+          <p class="section-label">Red flag checklist</p>
+          <ul class="flags" id="flagsList"></ul>
+
+          <div class="tips">
+            <p class="section-label" style="margin-bottom:2px;">Safety tips for this posting</p>
+            <ul id="tipsList">
+                <li>Never pay a fee to apply, register, or receive an offer letter.</li>
+                <li>Verify the company on LinkedIn and its official website before sharing any documents.</li>
+                <li>Search the exact posting text online — copy-pasted scam listings often surface elsewhere.</li>
+            </ul>
+          </div>
+
+          <div class="report-actions">
+            <button class="btn-ghost" id="saveToLog">Save to case log</button>
+            <button class="btn-ghost" id="recheck">Check another posting</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-log">
+      <h1 class="page-title">Case log</h1>
+      <p class="page-desc">Postings you've checked this session.</p>
+
+      <div class="card">
+        <div id="logEmpty" class="empty">No postings checked yet. Run a check to see it appear here.</div>
+        <table class="log" id="logTable" style="display:none;">
+          <thead>
+            <tr><th>Posting</th><th>Company</th><th>Score</th><th>Verdict</th><th>Checked</th></tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+const samples = {
+  genuine: "Software Engineer — Backend\nCompany: Northbridge Analytics Pvt Ltd\nLocation: Pune, India (Hybrid)\nSalary: ₹8,00,000 – ₹12,00,000 per annum\nContact: careers@northbridgeanalytics.com\n\nWe're looking for a backend engineer with 2+ years of experience in Python and PostgreSQL to join our data platform team. Apply through our careers page; our HR team will reach out to schedule a technical interview. No fees are ever required at any stage of our hiring process.",
+  scam: "URGENT HIRING!! Work From Home Data Entry\nCompany: Global Career Solutions\nLocation: Remote, Anywhere\nSalary: Earn ₹90,000 per week guaranteed!\nContact: hr.globalcareers2024@gmail.com\n\nNo experience needed! Immediate joining. To secure your position, pay a refundable registration fee of ₹1,500 via UPI. Limited slots, apply within 24 hours. Send your bank details to confirm your offer letter today."
+};
+
+let lastResult = null;
+
+// Tab Logic
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  
+  // Refresh logs when opening the log tab
+  if(name === 'log') {
+      fetchLogs();
+  }
+}
+
+// Sample Chips Logic
+document.querySelectorAll('.chip[data-sample]').forEach(c => {
+  c.addEventListener('click', () => { document.getElementById('jobtext').value = samples[c.dataset.sample]; });
+});
+
+// Run Check (API Call)
+// Run Check (API Call)
+document.getElementById('runCheck').addEventListener('click', async () => {
+  const text = document.getElementById('jobtext').value.trim();
+  const fileInput = document.getElementById('jobimage');
+  const file = fileInput.files[0];
+
+  if(!text && !file){
+    document.getElementById('jobtext').style.borderColor = 'var(--danger)';
+    document.getElementById('jobtext').placeholder = 'Paste a job description or upload a screenshot first.';
+    return;
+  }
+  
+  document.getElementById('jobtext').style.borderColor = 'var(--line)';
+  const btn = document.getElementById('runCheck');
+  btn.disabled = true;
+  document.getElementById('loadingRow').classList.add('active');
+
+  try {
+      // Use FormData to send both text and files
+      let formData = new FormData();
+      if (text) formData.append('text', text);
+      if (file) formData.append('file', file);
+
+      const response = await fetch('/predict', {
+          method: 'POST',
+          body: formData // No headers needed, the browser sets the correct Multipart format automatically
+      });
+      
+      const data = await response.json();
+      
+      if(data.error) {
+          alert(data.error);
+          return;
+      }
+
+      // If an image was uploaded, the backend will return the extracted text so we can parse it
+      const analyzedText = data.extracted_text || text;
+
+      // NEW CODE: Smarter, flexible matching for OCR text
+      
+      // 1. Find emails anywhere in the text
+      const emailMatch = analyzedText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+      
+      // 2. Find salaries using currency symbols (₹, $, Rs) or terms like LPA / k
+      const salaryMatch = analyzedText.match(/((?:₹|\$|Rs\.?)\s*\d+(?:[,\.]\d+)*(?:\s*[kKmM]|\s*LPA|\s*CTC)?(?:\s*\/?\s*(?:month|year|annum|week|hr|hour|day))?)/i) || analyzedText.match(/(\d+(?:[,\.]\d+)*\s*(?:LPA|CTC|k\b))/i);
+
+      // 3. Find locations or detect "Remote / WFH"
+      let locationText = 'Not stated';
+      const locMatch = analyzedText.match(/(?:Location|City|Based in)[:\-\s]+([A-Za-z0-9\s\,\.]{3,25})(?:\n|$)/i);
+      if (locMatch) { 
+          locationText = locMatch[1].trim(); 
+      } else if (analyzedText.match(/\b(Remote|Work from home|WFH|Hybrid)\b/i)) { 
+          locationText = analyzedText.match(/\b(Remote|Work from home|WFH|Hybrid)\b/i)[0]; 
+      }
+
+      // 4. Find Company names with broader keywords
+      let companyText = 'Not stated';
+      const compMatch = analyzedText.match(/(?:Company|Employer|Hiring for|Join)[:\-\s]+([A-Za-z0-9\s\.\&]{3,25})/i);
+      if (compMatch) { companyText = compMatch[1].trim(); }
+
+      const isFraud = data.prediction === "Fraudulent";
+      const verdict = isFraud ? "Suspicious" : "Looks Genuine";
+      const tone = isFraud ? "danger" : "safe";
+      
+      // Calculate Red Flag Percentage instead of AI Confidence
+      const totalRules = 4; // We have 4 rules in rule_engine.py
+      const triggeredFlags = data.red_flags.length;
+      const redFlagPercentage = Math.round((triggeredFlags / totalRules) * 100);
+
+      lastResult = {
+        score: redFlagPercentage, // Now the circle will show the Red Flag %
+        ml_confidence: data.confidence, // Saving the AI score just in case!
+        verdict: verdict,
+        tone: tone,
+        red_flags: data.red_flags,
+        fields: {
+          company: companyText, // Updated
+          email: emailMatch ? emailMatch[0] : 'Not stated',
+          salary: salaryMatch ? salaryMatch[0] : 'Not stated', // Updated
+          location: locationText // Updated
+        },
+        snippet: analyzedText.slice(0, 42).replace(/\n/g,' ') + (analyzedText.length > 42 ? '…' : '')
+      };
+
+      renderReport(lastResult);
+      switchTab('report');
+      fetchLogs();
+
+  } catch (error) {
+      console.error("Error:", error);
+      alert("Something went wrong. Make sure your Flask server is running and Tesseract is installed!");
+  } finally {
+      document.getElementById('loadingRow').classList.remove('active');
+      btn.disabled = false;
+  }
+});
+function renderReport(r){
+  const stamp = document.getElementById('stampEl');
+  const colors = { danger:'#A23B2E', caution:'#966016', safe:'#2F6B4F' };
+  
+  stamp.style.borderColor = colors[r.tone];
+  stamp.style.color = colors[r.tone];
+  document.getElementById('stampPct').textContent = r.score + '%';
+  document.getElementById('stampVerdict').textContent = r.verdict;
+
+  document.getElementById('reportHeadline').textContent =
+    r.tone === 'danger' ? 'This posting shows strong scam indicators' : 'This posting looks consistent with a genuine listing';
+    
+  document.getElementById('reportSub').textContent =
+    r.red_flags.length > 0 
+    ? `Risk Score: ${r.score}% based on red flags. The ML Model also classified this as ${r.verdict} with ${r.ml_confidence} certainty.` 
+    : `Risk Score: 0%. No obvious red flags found. The ML Model is ${r.ml_confidence} certain this is a genuine job.`;
+
+  const fg = document.getElementById('fieldsGrid');
+  fg.innerHTML = '';
+  const labels = { company:'Company name', email:'Contact email', salary:'Stated salary', location:'Location' };
+  Object.keys(labels).forEach(k => {
+    fg.innerHTML += `<div class="field-cell"><p class="k">${labels[k]}</p><p class="v">${r.fields[k]}</p></div>`;
+  });
+
+  const fl = document.getElementById('flagsList');
+  fl.innerHTML = '';
+  
+  if (r.red_flags.length > 0) {
+      r.red_flags.forEach(flagText => {
+        fl.innerHTML += `<li class="flag hit"><div class="flag-icon">!</div><div class="flag-body"><p class="t">Flag Detected</p><p class="d">${flagText}</p></div></li>`;
+      });
+  } else {
+      fl.innerHTML = `<li class="flag clear"><div class="flag-icon">✓</div><div class="flag-body"><p class="t">All Clear</p><p class="d">No obvious red flags detected by the rule engine.</p></div></li>`;
+  }
+
+  document.getElementById('reportBody').style.display = 'block';
+}
+
+document.getElementById('recheck').addEventListener('click', () => switchTab('check'));
+document.getElementById('saveToLog').addEventListener('click', () => switchTab('log'));
+
+// NEW: Fetch logs directly from SQLite backend
+async function fetchLogs(){
+  try {
+    const response = await fetch('/logs');
+    const logs = await response.json();
+    
+    const body = document.getElementById('logBody');
+    if(logs.length === 0){
+      document.getElementById('logEmpty').style.display = 'block';
+      document.getElementById('logTable').style.display = 'none';
+      return;
+    }
+    
+    document.getElementById('logEmpty').style.display = 'none';
+    document.getElementById('logTable').style.display = 'table';
+    
+    body.innerHTML = logs.map(c => `
+      <tr>
+        <td class="log-title">${c.snippet}</td>
+        <td>—</td>
+        <td>${c.score}%</td>
+        <td><span class="badge ${c.tone}">${c.verdict}</span></td>
+        <td class="log-meta">${c.time}</td>
+      </tr>`).join('');
+  } catch (error) {
+    console.error("Failed to load logs:", error);
+  }
+}
+
+// Load logs on initial startup
+fetchLogs();
+</script>
+</script>
+</body>
+</html>

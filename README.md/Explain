@@ -1,0 +1,18 @@
+# 🚨 Fake Job Detector (AI & Rule Engine)
+
+An end-to-end Machine Learning web application designed to detect fraudulent job postings. 
+
+## Features
+* **Machine Learning Model:** Uses TF-IDF and Logistic Regression to analyze job descriptions.
+* **Red Flag Rule Engine:** Scans for obvious scam indicators like free email domains, payment requests, and unrealistic urgency.
+* **Web Interface:** A Flask-powered frontend for users to easily paste job descriptions and get real-time AI predictions.
+
+## Tech Stack
+* **Backend:** Python, Flask
+* **Machine Learning:** scikit-learn, pandas, joblib
+* **Frontend:** HTML, CSS, JavaScript
+
+## How to Run
+1. Install dependencies: `pip install -r requirements.txt`
+2. Run the application: `python app.py`
+3. Open `http://127.0.0.1:5000` in your browser.
