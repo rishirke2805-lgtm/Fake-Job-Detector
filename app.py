@@ -4,11 +4,14 @@ import sqlite3
 import json
 import pytesseract
 from PIL import Image
+import os
 
 from backend.rule_engine import check_red_flags
 
-# NOTE: Tell Python exactly where Tesseract is installed on your Windows machine
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+if os.name == "nt":
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+else:
+    pytesseract.pytesseract.tesseract_cmd = 'tesseract'
 
 app = Flask(__name__, template_folder='frontend')
 
